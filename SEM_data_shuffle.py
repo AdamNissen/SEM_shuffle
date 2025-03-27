@@ -12,12 +12,6 @@ all of the sem data from single repositories to qgis projects.
 Update 2022/04/19 - I can batch process most of the SEM information. There are
 some repository requirements. I.e. there can only be one .xlsx file. There also
 can't be existing tfw files.
-
-DEV NOTE:
-    self.organize_sheet is not functioning right now. I believe calling of the 
-    spreadsheet was previously removed for some reason. I will look to fix this
-    at some point in the future, but for now just ignore the .xlsx part of this
-    script.
 """
 
 
@@ -180,7 +174,7 @@ class mica():
             name = name.replace('\\','/')
             self.move_tif(name)
                 
-    def organize_sheet(self, frame):
+    def organize_sheet(self, frame, sheet_name = "Sheet2"):
         '''
         This function will read data from .xlsx spreadsheets produced by users
         of the SMU SEM. The spreadhseets are discontinuous, made up of sub-sheets
@@ -194,10 +188,10 @@ class mica():
         
         Parameters
         ----------
-        excel_file : string
+        frame : string
             Full filepath of the excel file containing the spreadsheet that 
             needs to be organized. PLEASE NOTE this must be a .xlsx file.
-        sheet : string=Sheet1
+        sheet_name : string=Sheet2
             Name of the sheet within the .xlsx file that needs to be organized. 
             The default is 'Sheet1', which should apply to most folks using 
             this on data collected on the SMU SEM.
@@ -222,7 +216,7 @@ class mica():
         
         # importing the spreadsheet as mess, because its a mess. Also NaN makes
         # everything worse, so we're filling those right up
-        mess = frame #import the big messy sheet
+        mess = pd.read_excel(io = frame, sheet_name = sheet_name)#import the big messy sheet
         mess = mess.fillna('0')
         
         # Separating out column 1, where the starting and ending key cells occur
@@ -362,7 +356,7 @@ class mica():
         for name in y:
             spreadsheet = self.organize_sheet(frame = name)
             spreadsheet = self.change_coords(data = spreadsheet)
-            spreadsheet.to_csv(self.path+"/transformed_coordinates.csv")
+            spreadsheet.to_csv(self.output_path+"/transformed_coordinates.csv")
             break
         
     def batch_coords(self):
@@ -374,20 +368,20 @@ class mica():
         for name in y:
             spreadsheet = self.organize_sheet(frame = name)
             spreadsheet = self.change_coords(data = spreadsheet)
-            spreadsheet.to_csv(self.path+"/transformed_coordinates.csv")
+            spreadsheet.to_csv(self.output_path+"/transformed_coordinates.csv")
             break
     
 def test_with_bar():
     test = mica(path = "Example_Data", output_path = "Output/With_bar")
-    test.batch_tfw()
     test.batch_move()
+    test.batch_all()
 
 def test_without_bar():
     test = mica(path = "Example_Data", output_path = "Output/Bar_removed")
-    test.batch_tfw()
     test.batch_bar()
-
+    test.batch_all()
+    
 if __name__ == "__main__":
     test = mica(path = "Example_Data", output_path = "Output/Blank")
-    test.batch_tfw()
     test.batch_bar()
+    test.batch_all()
